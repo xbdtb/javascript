@@ -41,7 +41,8 @@ export class Exec {
                         query.command = 'sh';
                         const queryStr2 = querystring.stringify(query);
                         const path2 = `/api/v1/namespaces/${namespace}/pods/${podName}/exec?${queryStr2}`;
-                        stdin.removeAllListeners();
+                        stdin.removeAllListeners('data');
+                        stdin.removeAllListeners('end');
                         connect(this.handler2, path2);
                     } else {
                         if (stdout) {
@@ -53,6 +54,10 @@ export class Exec {
                     }
                 }
                 return true;
+            });
+            conn.onclose = (() => {
+                stdin.removeAllListeners('data');
+                stdin.removeAllListeners('end');
             });
             if (stdin != null) {
                 WebSocketHandler.handleStandardInput(conn, stdin);
