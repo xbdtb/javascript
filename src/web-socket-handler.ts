@@ -27,8 +27,8 @@ export class WebSocketHandler implements WebSocketInterface {
 
     public static handleStandardStreams(
         streamNum: number, buff: Buffer,
-        stdout: stream.Writable, stderr: stream.Writable,
-    ): V1Status | null {
+        stdout: stream.Writable, stderr: stream.Writable, endStream = true,
+    ): V1Status | string | null {
         if (buff.length < 1) {
             return null;
         }
@@ -38,13 +38,16 @@ export class WebSocketHandler implements WebSocketInterface {
             stderr.write(buff);
         } else if (streamNum === WebSocketHandler.StatusStream) {
             // stream closing.
-            if (stdout) {
-                stdout.end();
+            if (endStream) {
+                if (stdout) {
+                    stdout.end();
+                }
+                if (stderr) {
+                    stderr.end();
+                }
             }
-            if (stderr) {
-                stderr.end();
-            }
-            return JSON.parse(buff.toString('utf8')) as V1Status;
+            const result = buff.toString('utf8');
+            return result;
         } else {
             throw new Error('Unknown stream: ' + streamNum);
         }
